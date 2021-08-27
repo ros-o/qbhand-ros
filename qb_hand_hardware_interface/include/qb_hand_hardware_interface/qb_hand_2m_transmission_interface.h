@@ -25,8 +25,8 @@
  *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QB_HAND_TRANSMISSION_H
-#define QB_HAND_TRANSMISSION_H
+#ifndef QB_HAND_2M_TRANSMISSION_H
+#define QB_HAND_2M_TRANSMISSION_H
 
 #include <transmission_interface/transmission.h>
 #include <control_toolbox/filters.h>
@@ -37,7 +37,7 @@ namespace qb_hand_transmission_interface {
  * convert from \em qbhand motors state to its equivalent joint state representation, and vice versa.
  * \sa qb_device_transmission_interface::qbDeviceTransmissionResources
  */
-class qbHandVirtualTransmission : public transmission_interface::Transmission {
+class qbHand2MotorsVirtualTransmission : public transmission_interface::Transmission {
  public:
   /**
    * Build the \em qbhand transmission with default velocity and effort scale factors (respectively \p 0.2 and \p 0.001).
@@ -45,8 +45,8 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    * closure value, and follows the formula \f$f_{pos} = \frac{1}{closure\_limit}\f$. The default \p closure_limit is
    * set to 19000 ticks, but it can be modified during the execution with the proper method.
    */
-  qbHandVirtualTransmission()
-      : qbHandVirtualTransmission(1./19000, 0.2, 0.001) {}
+  qbHand2MotorsVirtualTransmission()
+      : qbHand2MotorsVirtualTransmission(true, 1./19000, 0.2, 0.001, 1./9500, -1./4000) {}
 
   /**
    * Build the \em qbhand transmission with the given scale factors.
@@ -54,11 +54,14 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    * \param velocity_factor Exponential filter smoothing factor.
    * \param effort_factor Motor current \em mA to joint effort \em A scale factor.
    */
-  qbHandVirtualTransmission(const double &position_factor, const double &velocity_factor, const double &effort_factor)
+  qbHand2MotorsVirtualTransmission(bool command_with_synergies, const double &position_factor, const double &velocity_factor, const double &effort_factor, const double &synergy_factor, const double &manipulation_factor)
       : Transmission(),
+        command_with_synergies_(command_with_synergies),
         position_factor_(position_factor),
         velocity_factor_(velocity_factor),
-        effort_factor_(effort_factor) {}
+        effort_factor_(effort_factor),
+        synergy_factor_(synergy_factor),
+        manipulation_factor_(manipulation_factor) {}
 
   /**
    * Transform \em effort variables from actuator to joint space.
@@ -70,9 +73,12 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    */
   inline void actuatorToJointEffort(const transmission_interface::ActuatorData &actuator, transmission_interface::JointData &joint) {
     ROS_ASSERT(numActuators() == actuator.effort.size() && numJoints() == joint.effort.size());
-    ROS_ASSERT(actuator.effort[0] && joint.effort[0]);
+    ROS_ASSERT(actuator.effort[0] && actuator.effort[1] && actuator.effort[2] && actuator.effort[3] && joint.effort[0] && joint.effort[1] && joint.effort[2] && joint.effort[3]);
 
-    *joint.effort[0] = *actuator.effort[0] * effort_factor_;
+    *joint.effort[0] = *actuator.effort[0] * effort_factor_;  // first motor current (from getCurrents)
+    *joint.effort[1] = *actuator.effort[1] * effort_factor_;  // second motor current (from getCurrents)
+    *joint.effort[2] = 0.0;  // meaningless
+    *joint.effort[3] = 0.0;  // meaningless
   }
 
   /**
@@ -85,10 +91,13 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    */
   inline void actuatorToJointVelocity(const transmission_interface::ActuatorData &actuator, transmission_interface::JointData &joint) {
     ROS_ASSERT(numActuators() == actuator.velocity.size() && numJoints() == joint.velocity.size());
-    ROS_ASSERT(actuator.velocity[0] && joint.velocity[0]);
+    ROS_ASSERT(actuator.velocity[0] && actuator.velocity[1] && actuator.velocity[2] && actuator.velocity[3] && joint.velocity[0] && joint.velocity[1] && joint.velocity[2] && joint.velocity[3]);
 
     // *actuator.velocity[0] is the current measured velocity in [ticks/s] while *joint.velocity[0] is the previous step velocity in [percent/s]
-    *joint.velocity[0] = filters::exponentialSmoothing(*actuator.velocity[0] * position_factor_, *joint.velocity[0], velocity_factor_);
+    *joint.velocity[0] = filters::exponentialSmoothing(*actuator.velocity[0] * position_factor_, *joint.velocity[0], velocity_factor_);  // first motor first encoder (from getPositions)
+    *joint.velocity[1] = filters::exponentialSmoothing(*actuator.velocity[2] * position_factor_, *joint.velocity[1], velocity_factor_);  // second motor first encoder (from getPositions)
+    *joint.velocity[2] = 0.0;  // meaningless
+    *joint.velocity[3] = 0.0;  // meaningless
   }
 
   /**
@@ -101,10 +110,18 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    */
   inline void actuatorToJointPosition(const transmission_interface::ActuatorData &actuator, transmission_interface::JointData &joint) {
     ROS_ASSERT(numActuators() == actuator.position.size() && numJoints() == joint.position.size());
-    ROS_ASSERT(actuator.position[0] && joint.position[0]);
+    ROS_ASSERT(actuator.position[0] && actuator.position[1] && actuator.position[2] && actuator.position[3] && joint.position[0] && joint.position[1] && joint.position[2] && joint.position[3]);
 
-    *joint.position[0] = *actuator.position[0] * position_factor_;
+    *joint.position[0] = *actuator.position[0] * position_factor_;  // first motor first encoder (from getPositions)
+    *joint.position[1] = *actuator.position[2] * position_factor_;  // second motor first encoder (from getPositions)
+    *joint.position[2] = (*actuator.position[0] + *actuator.position[2]) * synergy_factor_ / 2;  // comes from jointToActuatorPosition
+    *joint.position[3] = (*actuator.position[0] - *actuator.position[2]) / (*actuator.position[0] + *actuator.position[2] - (2 / manipulation_factor_));  // comes from jointToActuatorPosition
   }
+
+  /**
+   * \return \p true if the controller exploits synergies to control the device motors.
+   */
+  inline const bool getCommandWithSynergies() const { return command_with_synergies_; }
 
   /**
    * \return The current position scale factor.
@@ -131,10 +148,12 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    */
   inline void jointToActuatorEffort(const transmission_interface::JointData &joint, transmission_interface::ActuatorData &actuator) {
     ROS_ASSERT(numActuators() == actuator.effort.size() && numJoints() == joint.effort.size());
-    ROS_ASSERT(actuator.effort[0] && joint.effort[0]);
+    ROS_ASSERT(actuator.effort[0] && actuator.effort[1] && actuator.effort[2] && actuator.effort[3] && joint.effort[0] && joint.effort[1] && joint.effort[2] && joint.effort[3]);
 
-    // the qbhand cannot be controlled in current, but this could help in the near future
-    *actuator.effort[0] = *joint.effort[0] / effort_factor_;
+    // the qbhand cannot be controlled in current at the moment
+    *actuator.effort[0] = 0.0;
+    *actuator.effort[1] = 0.0;
+    // only two motors, other actuators are meaningless (used only to retrieve encoder positions)
   }
 
   /**
@@ -147,10 +166,12 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    */
   inline void jointToActuatorVelocity(const transmission_interface::JointData &joint, transmission_interface::ActuatorData &actuator) {
     ROS_ASSERT(numActuators() == actuator.velocity.size() && numJoints() == joint.velocity.size());
-    ROS_ASSERT(actuator.velocity[0] && joint.velocity[0]);
+    ROS_ASSERT(actuator.velocity[0] && actuator.velocity[1] && actuator.velocity[2] && actuator.velocity[3] && joint.velocity[0] && joint.velocity[1] && joint.velocity[2] && joint.velocity[3]);
 
-    // the qbhand cannot be controlled in velocity
+    // the qbhand cannot be controlled in velocity at the moment
     *actuator.velocity[0] = 0.0;
+    *actuator.velocity[1] = 0.0;
+    // only two motors, other actuators are meaningless (used only to retrieve encoder positions)
   }
 
   /**
@@ -163,32 +184,50 @@ class qbHandVirtualTransmission : public transmission_interface::Transmission {
    */
   inline void jointToActuatorPosition(const transmission_interface::JointData &joint, transmission_interface::ActuatorData &actuator) {
     ROS_ASSERT(numActuators() == actuator.position.size() && numJoints() == joint.position.size());
-    ROS_ASSERT(actuator.position[0] && joint.position[0]);
+    ROS_ASSERT(actuator.position[0] && actuator.position[1] && actuator.position[2] && actuator.position[3] && joint.position[0] && joint.position[1] && joint.position[2] && joint.position[3]);
 
-    *actuator.position[0] = *joint.position[0] / position_factor_;
+    if (command_with_synergies_) {
+      // first motor command (for setInputs)
+      *actuator.position[0] = (1 + *joint.position[3]) * *joint.position[2] / synergy_factor_ - *joint.position[3] / manipulation_factor_;
+      // second motor command (for setInputs)
+      *actuator.position[1] = (1 - *joint.position[3]) * *joint.position[2] / synergy_factor_ + *joint.position[3] / manipulation_factor_;
+    } else {
+      *actuator.position[0] = *joint.position[0] / position_factor_;  // first motor command (for setInputs)
+      *actuator.position[1] = *joint.position[1] / position_factor_;  // second motor command (for setInputs)
+    }
+    // only two motors, other actuators are meaningless (used only to retrieve encoder positions)
   }
 
   /**
-   * \return The number of actuators of this transmission, i.e always 1 for the \em qbhand.
+   * \return The number of actuators of this transmission, i.e always 4 for the \em qbhand 2 motors.
    */
-  inline std::size_t numActuators() const { return 1; }
+  inline std::size_t numActuators() const { return 4; }  // 2 real encoders and 2 encoders for absolute position reconstructions
 
   /**
-   * \return The number of joints of this transmission, i.e always 1 for the \em qbhand.
+   * \return The number of joints of this transmission, i.e always 4 for the \em qbhand 2 motors.
    */
-  inline std::size_t numJoints() const { return 1; }
+  inline std::size_t numJoints() const { return 4; }  // 2 motors and 2 synergies
 
   /**
    * Set the position scale factor.
-   * \param position_factor Motor position \em ticks to closure percent value [\p 0, \p 1] scale factor.
+   * \param motor_position_limit_inf Motor position lower limit in \em ticks (WARN: expected to be negative!).
+   * \param motor_position_limit_sup Motor position upper limit in \em ticks.
    */
-  inline void setPositionFactor(const int &motor_position_limit) { position_factor_ = 1./motor_position_limit; }
+  inline void setPositionFactor(const int &motor_position_limit_inf, const int &motor_position_limit_sup) {
+    double limit_range = motor_position_limit_sup + motor_position_limit_inf;
+    position_factor_ = 1./limit_range;  // WARN: inf is expected to be negative!
+    synergy_factor_ = 1./(limit_range/2);
+    manipulation_factor_ = 1./motor_position_limit_inf;  // WARN: inf is expected to be negative!
+  }
 
  private:
+  bool command_with_synergies_;
   double position_factor_;
   double velocity_factor_;
   double effort_factor_;
+  double synergy_factor_;
+  double manipulation_factor_;
 };
 }  // namespace qb_hand_transmission_interface
 
-#endif // QB_HAND_TRANSMISSION_H
+#endif // QB_HAND_2M_TRANSMISSION_H

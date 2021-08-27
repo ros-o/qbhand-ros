@@ -42,9 +42,8 @@ Install the packages for a ROS user is straightforward. Nonetheless the followin
  1. Clone both the `qb_device` and `qb_hand` packages to your Catkin Workspace, e.g. `~/catkin_ws`:
  {{{
 cd `~/catkin_ws/src`
-git clone https://bitbucket.org/qbrobotics/qbdevice-ros.git
-git clone https://bitbucket.org/qbrobotics/qbhand-ros.git
-git checkout production-$ROS_DISTRO
+git clone --branch production-$ROS_DISTRO https://bitbucket.org/qbrobotics/qbdevice-ros.git
+git clone --branch production-$ROS_DISTRO https://bitbucket.org/qbrobotics/qbhand-ros.git
  }}}
 
  1. Compile the packages using `catkin`:

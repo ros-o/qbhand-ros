@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
-project(qb_hand_hardware_interface VERSION 2.1.2 LANGUAGES CXX)
+project(qb_hand_hardware_interface VERSION 2.2.0 LANGUAGES CXX)
 
 # Dependency Settings
 find_package(catkin REQUIRED
@@ -29,6 +29,7 @@ catkin_package(
 # Exported libraries
 add_library(${PROJECT_NAME}
   src/qb_hand_hardware_interface.cpp
+  src/qb_hand_2m_hardware_interface.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

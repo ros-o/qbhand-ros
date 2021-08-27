@@ -2,6 +2,18 @@
 Changelog for package qb_hand_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2021-08-27)
+------------------
+* Fix virtual link inertia values
+* Add Gazebo SoftHand and SoftHand 2 Motors plugin skeletons
+* Add hardware interface for SoftHand 2 Motors
+* Fix cmake resource installation
+* Fix meshes and virtual link inertia
+* Add collision meshes
+* Update SoftHand inertial values
+* Added tools(launch and URDF) to control more than one hand.
+* Add fixed open SoftHand mesh
+
 2.1.2 (2019-05-28)
 ------------------
 

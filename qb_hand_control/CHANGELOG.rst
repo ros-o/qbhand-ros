@@ -2,6 +2,16 @@
 Changelog for package qb_hand_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.0 (2021-08-27)
+------------------
+* Add Gazebo SoftHand and SoftHand 2 Motors plugin skeletons
+* Add hardware interface for SoftHand 2 Motors
+* Set a better name for fake joint simulation variables
+* Fix cmake resource installation
+* Fix launch
+* Disable Gazebo support for qb SoftHand
+* Added tools(launch and URDF) to control more than one hand.
+
 2.1.2 (2019-05-28)
 ------------------
 * Fix minor style issues

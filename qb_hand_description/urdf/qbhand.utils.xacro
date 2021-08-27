@@ -22,6 +22,20 @@
         <mimic joint="${mimic_joint}_joint" multiplier="${mimic_reduction}"/>
       </xacro:if>
     </joint>
+
+    <transmission name="${namespace}_transmission">
+      <type>transmission_interface/qbMoveTransmission</type>
+      <joint name="${namespace}_${finger}_${phalanx}_${virtual_suffix}joint">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${namespace}_${finger}_${phalanx}_${virtual_suffix}joint">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </actuator>
+    </transmission>
+
+    <gazebo reference="${namespace}_${finger}_${phalanx}_${virtual_suffix}joint">
+      <!-- TODO: add other Gazebo Joint properties (http://sdformat.org/spec?elem=joint) -->
+    </gazebo>
   </xacro:macro>
 
   <xacro:macro name="build_link" params="name **inertia material:=^|'default' mesh:=^|'' mesh_collision:=^|''">
@@ -41,14 +55,37 @@
         </collision>
       </xacro:if>
     </link>
+
+    <gazebo reference="${name}_link">
+      <self_collide>1</self_collide>
+      <!-- TODO: add other Gazebo Link properties (http://sdformat.org/spec?elem=link) -->
+      <!--      <collision>-->
+      <!--        <surface>-->
+      <!--          <contact>-->
+      <!--            <ode>-->
+      <!--              <kp>1.0</kp>-->
+      <!--              <kd>0.01</kd>-->
+      <!--              <max_vel>0.0</max_vel>-->
+      <!--              <min_depth>0.001</min_depth>-->
+      <!--            </ode>-->
+      <!--          </contact>-->
+      <!--          <friction>-->
+      <!--            <ode>-->
+      <!--              <mu>0.9</mu>-->
+      <!--              <mu2>0.9</mu2>-->
+      <!--            </ode>-->
+      <!--          </friction>-->
+      <!--        </surface>-->
+      <!--      </collision>-->
+    </gazebo>
   </xacro:macro>
 
-  <xacro:macro name="build_virtual_link" params="name negligible_mass:=^|.01">
+  <xacro:macro name="build_virtual_link" params="name">
     <link name="${name}_virtual_link">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="${negligible_mass}"/>
-        <inertia ixx="${negligible_mass * 1e-6}" ixy="0.0" ixz="0.0" iyy="${negligible_mass * 1e-6}" iyz="0.0" izz="${negligible_mass * 1e-6}"/>
+        <mass value="1e-4"/>
+        <inertia ixx="1e-9" ixy="0.0" ixz="0.0" iyy="1e-9" iyz="0.0" izz="1e-9"/>
       </inertial>
     </link>
   </xacro:macro>
@@ -112,7 +149,8 @@
       </xacro:if>
       <inertial_group>
         <mass value="${yaml_file[configuration][finger][phalanx]['inertial']['mass']}"/>
-        <origin xyz="${yaml_file[configuration][finger][phalanx]['inertial']['origin']}"/>
+        <origin xyz="${yaml_file[configuration][finger][phalanx]['inertial']['origin']['position']}"
+                rpy="${yaml_file[configuration][finger][phalanx]['inertial']['origin']['orientation']}"/>
         <inertia ixx="${yaml_file[configuration][finger][phalanx]['inertial']['inertia']['ixx']}"
                  ixy="${yaml_file[configuration][finger][phalanx]['inertial']['inertia']['ixy']}"
                  ixz="${yaml_file[configuration][finger][phalanx]['inertial']['inertia']['ixz']}"
@@ -160,7 +198,8 @@
       <xacro:insert_block name="origin"/>
       <inertial_group>
         <mass value="${yaml_file[configuration][name]['inertial']['mass']}"/>
-        <origin xyz="${yaml_file[configuration][name]['inertial']['origin']}"/>
+        <origin xyz="${yaml_file[configuration][name]['inertial']['origin']['position']}"
+                rpy="${yaml_file[configuration][name]['inertial']['origin']['orientation']}"/>
         <inertia ixx="${yaml_file[configuration][name]['inertial']['inertia']['ixx']}"
                  ixy="${yaml_file[configuration][name]['inertial']['inertia']['ixy']}"
                  ixz="${yaml_file[configuration][name]['inertial']['inertia']['ixz']}"
@@ -171,27 +210,37 @@
     </xacro:build_fixed_structure>
   </xacro:macro>
 
-  <xacro:macro name="build_synergy_mechanism" params="namespace:=^ parent:=^ axis *dynamics *limits">
-    <joint name="${namespace}_synergy_joint" type="revolute">
+  <xacro:macro name="build_synergy_mechanism" params="namespace:=^ synergy_type:=^ parent:=^ axis *dynamics *limits">
+    <joint name="${namespace}_${synergy_type}_joint" type="revolute">
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <parent link="${parent}_link"/>
-      <child link="${namespace}_tendon_virtual_link"/>
+      <child link="${namespace}_${synergy_type}_tendon_virtual_link"/>
       <axis xyz="${axis}"/>
       <xacro:insert_block name="dynamics"/>
       <xacro:insert_block name="limits"/>
     </joint>
 
-    <xacro:build_virtual_link name="${namespace}_tendon"/>
+    <transmission name="${namespace}_${synergy_type}_transmission">
+      <type>transmission_interface/qbMoveTransmission</type>
+      <joint name="${namespace}_${synergy_type}_joint">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${namespace}_${synergy_type}_joint">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </actuator>
+    </transmission>
+
+    <xacro:build_virtual_link name="${namespace}_${synergy_type}_tendon"/>
   </xacro:macro>
 
-  <xacro:macro name="build_synergy_mechanism_from_yaml" params="namespace:=^ parent">
-    <xacro:build_synergy_mechanism axis="${yaml_file[configuration]['synergy']['axis']}">
-      <dynamics damping="${yaml_file[configuration]['synergy']['dynamics']['damping']}"
-                friction="${yaml_file[configuration]['synergy']['dynamics']['friction']}"/>
-      <limit lower="${yaml_file[configuration]['synergy']['limits']['lower']}"
-             upper="${yaml_file[configuration]['synergy']['limits']['upper']}"
-             effort="${yaml_file[configuration]['synergy']['limits']['effort']}"
-             velocity="${yaml_file[configuration]['synergy']['limits']['velocity']}"/>
+  <xacro:macro name="build_synergy_mechanism_from_yaml" params="namespace:=^ synergy_type parent">
+    <xacro:build_synergy_mechanism axis="${yaml_file[configuration][synergy_type]['axis']}">
+      <dynamics damping="${yaml_file[configuration][synergy_type]['dynamics']['damping']}"
+                friction="${yaml_file[configuration][synergy_type]['dynamics']['friction']}"/>
+      <limit lower="${yaml_file[configuration][synergy_type]['limits']['lower']}"
+             upper="${yaml_file[configuration][synergy_type]['limits']['upper']}"
+             effort="${yaml_file[configuration][synergy_type]['limits']['effort']}"
+             velocity="${yaml_file[configuration][synergy_type]['limits']['velocity']}"/>
     </xacro:build_synergy_mechanism>
   </xacro:macro>
 
@@ -205,12 +254,22 @@
       <xacro:insert_block name="origin"/>
     </xacro:build_displaced_fixed_structure_from_yaml>
     <xacro:build_fixed_structure_from_yaml name="palm" parent="${namespace}_base"/>
-    <xacro:build_synergy_mechanism_from_yaml parent="${namespace}_palm"/>
+    <xacro:build_synergy_mechanism_from_yaml synergy_type="synergy" parent="${namespace}_palm"/>
     <xacro:build_two_phalanx_finger_from_yaml finger="thumb" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="index" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="middle" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="ring" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="little" parent="${namespace}_palm"/>
+  </xacro:macro>
+
+  <xacro:macro name="build_hand_2m_from_yaml" params="filename:='default' configuration:='qbhand_right' namespace parent *origin">
+    <xacro:property name="yaml_filename" value="$(find qb_hand_description)/config/${filename}.yaml"/>
+    <xacro:property name="yaml_file" value="${load_yaml(yaml_filename)}"/>
+
+    <xacro:build_hand_from_yaml filename="${filename}" configuration="${configuration}" namespace="${namespace}" parent="${parent}">
+      <xacro:insert_block name="origin"/>
+    </xacro:build_hand_from_yaml>
+    <xacro:build_synergy_mechanism_from_yaml synergy_type="manipulation" parent="${namespace}_palm"/>
   </xacro:macro>
 
 </robot>

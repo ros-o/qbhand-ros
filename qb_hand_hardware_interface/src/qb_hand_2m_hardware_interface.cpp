@@ -25,41 +25,48 @@
  *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <qb_hand_hardware_interface/qb_hand_hardware_interface.h>
+#include <qb_hand_hardware_interface/qb_hand_2m_hardware_interface.h>
 
 using namespace qb_hand_hardware_interface;
 
-qbHandHW::qbHandHW()
-    : qbDeviceHW(std::make_shared<qb_hand_transmission_interface::qbHandVirtualTransmission>(), {"synergy_joint"}, {"synergy_joint"}) {
+qbHand2MotorsHW::qbHand2MotorsHW()
+    : qbDeviceHW(std::make_shared<qb_hand_transmission_interface::qbHand2MotorsVirtualTransmission>(), {"motor_1_joint", "motor_1_fake_joint", "motor_2_joint", "motor_2_fake_joint"}, {"motor_1_joint", "motor_2_joint", "synergy_joint", "manipulation_joint"}) {
 
 }
 
-qbHandHW::~qbHandHW() {
+qbHand2MotorsHW::~qbHand2MotorsHW() {
 
 }
 
-std::vector<std::string> qbHandHW::getJoints() {
-  return joints_.names;
+std::vector<std::string> qbHand2MotorsHW::getJoints() {
+  if (command_with_synergies_) {
+    return {joints_.names.at(2), joints_.names.at(3)};
+  }
+  return {joints_.names.at(0), joints_.names.at(1)};
 }
 
-bool qbHandHW::init(ros::NodeHandle &root_nh, ros::NodeHandle &robot_hw_nh) {
+bool qbHand2MotorsHW::init(ros::NodeHandle &root_nh, ros::NodeHandle &robot_hw_nh) {
   if (!qb_device_hardware_interface::qbDeviceHW::init(root_nh, robot_hw_nh)) {
     return false;
   }
+  // for qb SoftHand 2 Motors is important that the following assertions hold
+  ROS_ASSERT(device_.position_limits.size() == 4);
+  ROS_ASSERT(device_.position_limits.at(0) == device_.position_limits.at(2) && device_.position_limits.at(1) == device_.position_limits.at(3));
 
   // if the device interface initialization has succeed the device info have been retrieved
-  std::static_pointer_cast<qb_hand_transmission_interface::qbHandVirtualTransmission>(transmission_.getTransmission())->setPositionFactor(device_.position_limits.at(1));
+  std::static_pointer_cast<qb_hand_transmission_interface::qbHand2MotorsVirtualTransmission>(transmission_.getTransmission())->setPositionFactor(device_.position_limits.at(0), device_.position_limits.at(1));
+  command_with_synergies_ = std::static_pointer_cast<qb_hand_transmission_interface::qbHand2MotorsVirtualTransmission>(transmission_.getTransmission())->getCommandWithSynergies();
   return true;
 }
 
-void qbHandHW::read(const ros::Time &time, const ros::Duration &period) {
+void qbHand2MotorsHW::read(const ros::Time &time, const ros::Duration &period) {
   // read actuator state from the hardware (convert to proper measurement units)
   qb_device_hardware_interface::qbDeviceHW::read(time, period);
 }
 
-void qbHandHW::write(const ros::Time &time, const ros::Duration &period) {
+void qbHand2MotorsHW::write(const ros::Time &time, const ros::Duration &period) {
   // send actuator command to the hardware (saturate and convert to proper measurement units)
   qb_device_hardware_interface::qbDeviceHW::write(time, period);
 }
 
-PLUGINLIB_EXPORT_CLASS(qb_hand_hardware_interface::qbHandHW, hardware_interface::RobotHW)
+PLUGINLIB_EXPORT_CLASS(qb_hand_hardware_interface::qbHand2MotorsHW, hardware_interface::RobotHW)

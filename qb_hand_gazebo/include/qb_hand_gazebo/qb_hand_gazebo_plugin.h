@@ -1,7 +1,7 @@
 /***
  *  Software License Agreement: BSD 3-Clause License
  *
- *  Copyright (c) 2016-2021, qbrobotics®
+ *  Copyright (c) 2016-2018, qbrobotics®
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
@@ -25,41 +25,48 @@
  *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <qb_hand_hardware_interface/qb_hand_hardware_interface.h>
+#ifndef QB_HAND_GAZEBO_PLUGIN_H
+#define QB_HAND_GAZEBO_PLUGIN_H
 
-using namespace qb_hand_hardware_interface;
+// ROS libraries
+#include <ros/ros.h>
+#include <controller_manager/controller_manager.h>
+#include <transmission_interface/transmission_parser.h>
 
-qbHandHW::qbHandHW()
-    : qbDeviceHW(std::make_shared<qb_hand_transmission_interface::qbHandVirtualTransmission>(), {"synergy_joint"}, {"synergy_joint"}) {
+// Gazebo libraries
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
 
-}
+// internal libraries
+#include <qb_device_gazebo/combined_robot_hw_sim.h>
+#include <qb_hand_gazebo/qb_hand_gazebo_hardware_interface.h>
 
-qbHandHW::~qbHandHW() {
+namespace qb_hand_gazebo_plugin {
+class qbHandGazeboPlugin : public gazebo::ModelPlugin {
 
-}
+ public:
+  qbHandGazeboPlugin() : ModelPlugin() {}
+  ~qbHandGazeboPlugin() override;
+  void Load(gazebo::physics::ModelPtr parent, sdf::ElementPtr sdf) override;
+  void Update(const gazebo::common::UpdateInfo &info);
 
-std::vector<std::string> qbHandHW::getJoints() {
-  return joints_.names;
-}
+ private:
+  std::string getURDF(const std::string &param_name);
+  bool parseTransmissionsFromURDF(const std::string &urdf_string);
 
-bool qbHandHW::init(ros::NodeHandle &root_nh, ros::NodeHandle &robot_hw_nh) {
-  if (!qb_device_hardware_interface::qbDeviceHW::init(root_nh, robot_hw_nh)) {
-    return false;
-  }
+  gazebo::event::ConnectionPtr update_connection_;
+  gazebo::physics::ModelPtr parent_model_;
+  sdf::ElementPtr sdf_;
+  ros::NodeHandle model_nh_;
+  ros::NodeHandle model_nh_control_;
+  ros::Duration control_period_;
+  ros::Time last_sim_time_ros_;
+  std::vector<transmission_interface::TransmissionInfo> transmissions_;
+  std::shared_ptr<gazebo_ros_control::CombinedRobotHWSim> robot_hw_sim_;
+  std::shared_ptr<controller_manager::ControllerManager> controller_manager_;
+  std::string robot_description_;
+  std::string robot_hw_sim_name_;
+};
+}  // namespace qb_hand_gazebo_plugin
 
-  // if the device interface initialization has succeed the device info have been retrieved
-  std::static_pointer_cast<qb_hand_transmission_interface::qbHandVirtualTransmission>(transmission_.getTransmission())->setPositionFactor(device_.position_limits.at(1));
-  return true;
-}
-
-void qbHandHW::read(const ros::Time &time, const ros::Duration &period) {
-  // read actuator state from the hardware (convert to proper measurement units)
-  qb_device_hardware_interface::qbDeviceHW::read(time, period);
-}
-
-void qbHandHW::write(const ros::Time &time, const ros::Duration &period) {
-  // send actuator command to the hardware (saturate and convert to proper measurement units)
-  qb_device_hardware_interface::qbDeviceHW::write(time, period);
-}
-
-PLUGINLIB_EXPORT_CLASS(qb_hand_hardware_interface::qbHandHW, hardware_interface::RobotHW)
+#endif // QB_HAND_GAZEBO_PLUGIN_H

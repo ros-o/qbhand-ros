@@ -20,14 +20,19 @@
   <!-- initialization settings -->
   <arg name="activate_on_initialization" default="false" doc="Choose whether or not to activate the motors on node startup."/>
   <arg name="rescan_on_initialization" default="false" doc="Choose whether or not to rescan the serial ports on node startup."/>
+  <arg name="use_fake_measurement_mode" default="false" doc="Choose whether or not to use previous command values instead of device measurements."/>
   <!-- launch settings -->
   <arg name="standalone" default="false" doc="Choose whether or not to start the Communication Handler."/>
   <arg name="use_controller_gui" default="false" doc="Choose whether or not to use the controller GUI."/>
+  <arg name="use_gazebo" default="false" doc="Choose whether or not to use Gazebo instead of real devices."/>
   <arg name="use_rviz" default="false" doc="Choose whether or not to use rviz."/>
+  <arg name="use_joint_limits" default="false" doc="Choose whether or not to use the robot joint limits."/>
   <arg name="use_waypoints" default="false" doc="Choose whether or not to use the waypoint references."/>
 
 
-  <include file="$(find qb_device_driver)/launch/communication_handler.launch" if="$(arg standalone)"/>
+  <group unless="$(arg use_gazebo)">
+    <include file="$(find qb_device_driver)/launch/communication_handler.launch" if="$(arg standalone)"/>
+  </group>
 
   <include file="$(find qb_device_bringup)/launch/device_bringup.launch" pass_all_args="true"/>
 

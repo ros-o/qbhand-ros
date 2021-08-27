@@ -25,36 +25,36 @@
  *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QB_HAND_HARDWARE_INTERFACE_H
-#define QB_HAND_HARDWARE_INTERFACE_H
+#ifndef QB_HAND_2M_HARDWARE_INTERFACE_H
+#define QB_HAND_2M_HARDWARE_INTERFACE_H
 
 // ROS libraries
 #include <pluginlib/class_list_macros.hpp>
 
 // internal libraries
 #include <qb_device_hardware_interface/qb_device_hardware_interface.h>
-#include <qb_hand_hardware_interface/qb_hand_transmission_interface.h>
+#include <qb_hand_hardware_interface/qb_hand_2m_transmission_interface.h>
 
 namespace qb_hand_hardware_interface {
 /**
  * The qbrobotics \em qbhand HardWare interface implements the specific structures to manage the communication with the
  * \em qbhand device. It exploits the features provided by the base device-independent hardware interface and the
  * specific transmission interface.
- * \sa qb_device_hardware_interface::qbDeviceHW, qb_hand_transmission_interface::qbHandVirtualTransmission
+ * \sa qb_device_hardware_interface::qbDeviceHW, qb_hand_transmission_interface::qbHand2MVirtualTransmission
  */
-class qbHandHW : public qb_device_hardware_interface::qbDeviceHW {
+class qbHand2MotorsHW : public qb_device_hardware_interface::qbDeviceHW {
  public:
   /**
    * Initialize the \p qb_device_hardware_interface::qbDeviceHW with the specific transmission interface and actuator
    * and joint names.
-   * \sa qb_hand_transmission_interface::qbHandVirtualTransmission
+   * \sa qb_hand_transmission_interface::qbHand2MotorsVirtualTransmission
    */
-  qbHandHW();
+  qbHand2MotorsHW();
 
   /**
    * Do nothing.
    */
-  ~qbHandHW() override;
+  ~qbHand2MotorsHW() override;
 
   /**
    * \return The vector of controller joint names.
@@ -82,8 +82,11 @@ class qbHandHW : public qb_device_hardware_interface::qbDeviceHW {
    * \param period The time passed since the last call to this method, i.e. the control period.
    */
   void write(const ros::Time &time, const ros::Duration &period) override;
+
+ private:
+  bool command_with_synergies_;
 };
-typedef std::shared_ptr<qbHandHW> qbHandHWPtr;
+typedef std::shared_ptr<qbHand2MotorsHW> qbHand2MotorsHWPtr;
 }  // namespace qb_hand_hardware_interface
 
-#endif // QB_HAND_HARDWARE_INTERFACE_H
+#endif // QB_HAND_2M_HARDWARE_INTERFACE_H
