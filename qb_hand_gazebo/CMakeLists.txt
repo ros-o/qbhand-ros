@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
-project(qb_hand_gazebo VERSION 2.2.2 LANGUAGES CXX)
+project(qb_hand_gazebo VERSION 2.2.3 LANGUAGES CXX)
 
 # Dependency Settings
 find_package(catkin REQUIRED
@@ -69,18 +69,18 @@ add_dependencies(qb_hand_gazebo_plugin
 if (CMAKE_VERSION VERSION_LESS "3.1")
   target_compile_options(qb_hand_gazebo_plugin
     PUBLIC
-      "-std=c++14"
+      "-std=c++17"
   )
   target_compile_options(qb_hand_gazebo_hardware_interface
     PUBLIC
-      "-std=c++14"
+      "-std=c++17"
   )
 else ()
   set_property(
     TARGET
       qb_hand_gazebo_plugin
       qb_hand_gazebo_hardware_interface
-    PROPERTY CXX_STANDARD 14
+    PROPERTY CXX_STANDARD 17
   )
 
   set_property(

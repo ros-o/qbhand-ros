@@ -2,6 +2,10 @@
 Changelog for package qb_hand_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.3 (2021-11-05)
+------------------
+* Minor fix on c++ version and parameters in launch files.
+
 2.2.2 (2021-08-30)
 ------------------
 
