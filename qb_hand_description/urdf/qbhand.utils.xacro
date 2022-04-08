@@ -174,10 +174,10 @@
     <xacro:build_phalanx_from_yaml phalanx="distal" parent="${namespace}_${finger}_middle"/>
   </xacro:macro>
 
-  <xacro:macro name="build_fixed_structure" params="name:=^ *origin parent:=^ *inertia material:=^ mesh:=^ mesh_collision:=^">
+  <xacro:macro name="build_fixed_structure" params="name:=^ *origin parent:=^ parent_link_suffix:=^|'_link' *inertia material:=^ mesh:=^ mesh_collision:=^">
     <joint name="${name}_fixed_joint" type="fixed">
       <xacro:insert_block name="origin"/>
-      <parent link="${parent}_link"/>
+      <parent link="${parent}${parent_link_suffix}"/>
       <child link="${name}_link"/>
     </joint>
 
@@ -186,14 +186,14 @@
     </xacro:build_link>
   </xacro:macro>
 
-  <xacro:macro name="build_fixed_structure_from_yaml" params="yaml_file:=^ configuration:=^ name namespace:=^ parent">
+  <xacro:macro name="build_fixed_structure_from_yaml" params="yaml_file:=^ configuration:=^ name namespace:=^ parent parent_link_suffix:=^|'_link'">
     <xacro:build_displaced_fixed_structure_from_yaml name="${name}" parent="${parent}">
       <origin xyz="${yaml_file[configuration][name]['position']}"
               rpy="${yaml_file[configuration][name]['orientation']}"/>
     </xacro:build_displaced_fixed_structure_from_yaml>
   </xacro:macro>
 
-  <xacro:macro name="build_displaced_fixed_structure_from_yaml" params="yaml_file:=^ configuration:=^ name namespace:=^ parent *origin">
+  <xacro:macro name="build_displaced_fixed_structure_from_yaml" params="yaml_file:=^ configuration:=^ name namespace:=^ parent parent_link_suffix:=^|'_link' *origin">
     <xacro:build_fixed_structure name="${namespace}_${name}" material="${name}" mesh="${yaml_file[configuration][name]['mesh']}" mesh_collision="${yaml_file[configuration][name]['mesh_collision']}">
       <xacro:insert_block name="origin"/>
       <inertial_group>
@@ -244,7 +244,7 @@
     </xacro:build_synergy_mechanism>
   </xacro:macro>
 
-  <xacro:macro name="build_hand_from_yaml" params="filename:='default' configuration:='qbhand_right' namespace parent *origin">
+  <xacro:macro name="build_hand_from_yaml" params="filename:='default' configuration:='qbhand_right' namespace parent parent_link_suffix:=^|'_link' *origin">
     <xacro:property name="use_mimic" value="true"/>
     <xacro:property name="mimic_joint" value="${namespace}_synergy"/>
     <xacro:property name="yaml_filename" value="$(find qb_hand_description)/config/${filename}.yaml"/>
@@ -253,7 +253,12 @@
     <xacro:build_displaced_fixed_structure_from_yaml name="base" parent="${parent}">
       <xacro:insert_block name="origin"/>
     </xacro:build_displaced_fixed_structure_from_yaml>
-    <xacro:build_fixed_structure_from_yaml name="palm" parent="${namespace}_base"/>
+    <xacro:if value="${parent_link_suffix != '_link'}">
+      <xacro:build_fixed_structure_from_yaml name="palm" parent="${namespace}_base_link"/>
+    </xacro:if>
+    <xacro:if value="${parent_link_suffix == '_link'}">
+      <xacro:build_fixed_structure_from_yaml name="palm" parent="${namespace}_base"/>
+    </xacro:if>
     <xacro:build_synergy_mechanism_from_yaml synergy_type="synergy" parent="${namespace}_palm"/>
     <xacro:build_two_phalanx_finger_from_yaml finger="thumb" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="index" parent="${namespace}_palm"/>
@@ -262,7 +267,7 @@
     <xacro:build_three_phalanx_finger_from_yaml finger="little" parent="${namespace}_palm"/>
   </xacro:macro>
 
-  <xacro:macro name="build_hand_2m_from_yaml" params="filename:='default' configuration:='qbhand_right' namespace parent *origin">
+  <xacro:macro name="build_hand_2m_from_yaml" params="filename:='default' configuration:='qbhand_right' namespace parent parent_link_suffix:=^|'_link' *origin">
     <xacro:property name="yaml_filename" value="$(find qb_hand_description)/config/${filename}.yaml"/>
     <xacro:property name="yaml_file" value="${load_yaml(yaml_filename)}"/>
 

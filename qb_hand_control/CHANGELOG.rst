@@ -2,6 +2,11 @@
 Changelog for package qb_hand_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (2022-04-08)
+------------------
+* modified SHR2 waypoints and limit range
+* modified urdf and launch in order to attach SHR2 to robots urdf
+
 2.2.3 (2021-11-05)
 ------------------
 * Minor fix on c++ version and parameters in launch files.

@@ -2,6 +2,11 @@
 Changelog for package qb_hand_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (2022-04-08)
+------------------
+* modified urdf and launch in order to attach SHR2 to robots urdf
+* Modified .utils.xacro file in order to specify a robot parent link not ending with '_link'
+
 2.2.3 (2021-11-05)
 ------------------
 
