@@ -123,6 +123,11 @@ class qbHand2MotorsVirtualTransmission : public transmission_interface::Transmis
    */
   inline const bool getCommandWithSynergies() const { return command_with_synergies_; }
 
+  void setCommandWithSynergies(bool command_with_synergies) {
+    command_with_synergies_ = command_with_synergies;
+  }
+
+
   /**
    * \return The current position scale factor.
    */

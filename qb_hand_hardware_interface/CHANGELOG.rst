@@ -2,6 +2,10 @@
 Changelog for package qb_hand_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.0 (2022-07-06)
+------------------
+* Implemented a new controller to control SH2R motors independently
+
 2.3.0 (2022-04-08)
 ------------------
 

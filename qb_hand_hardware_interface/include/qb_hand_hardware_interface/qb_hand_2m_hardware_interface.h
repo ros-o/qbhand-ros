@@ -83,6 +83,8 @@ class qbHand2MotorsHW : public qb_device_hardware_interface::qbDeviceHW {
    */
   void write(const ros::Time &time, const ros::Duration &period) override;
 
+  void doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list);
+
  private:
   bool command_with_synergies_;
 };

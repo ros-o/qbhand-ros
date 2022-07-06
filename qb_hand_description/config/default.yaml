@@ -38,6 +38,22 @@ default:
         upper: 1.0
         effort: *effort
         velocity: *velocity
+    motor_1: &motor_1
+      axis: "0 0 1"  # it is not important though
+      dynamics: *dynamics
+      limits:
+        lower: 0
+        upper: 1.0
+        effort: *effort
+        velocity: *velocity
+    motor_2: &motor_2
+      axis: "0 0 1"  # it is not important though
+      dynamics: *dynamics
+      limits:
+        lower: 0
+        upper: 1.0
+        effort: *effort
+        velocity: *velocity
 
   finger:
     knuckle: &knuckle
@@ -208,14 +224,16 @@ default:
           izz: 6.6781963e-07
 
 qbhand_right:
-  base:
-    mesh: "flange_iso_04"
-    mesh_collision: "flange_iso_04"
+  90_deg_flange_base:
+    mesh: "flange_deg_90"
+    mesh_collision: "flange_deg_90"
+    position: "1.0 7.8738498e-04 1.5878899e-02"
+    orientation: "3.14 0 0"
     inertial:
       mass: 0.205
       origin:
         position: "0.0 7.8738498e-04 1.5878899e-02"  # x^ less than e-04 from CAD --> -1.9242016e-07
-        orientation: "0 0 0"
+        orientation: "0 0 1.57"
       inertia:
         ixx: 1.2506929e-04
         ixy: 0.0  # approx
@@ -223,6 +241,24 @@ qbhand_right:
         iyy: 1.3387790e-04
         iyz: 0.0  # approx
         izz: 1.9218394e-04
+  
+  base:
+    mesh: "flange_iso_04"
+    mesh_collision: "flange_iso_04"
+    position: "0.0 7.8738498e-04 1.5878899e-02"
+    orientation: "0 0 0"
+    inertial:
+      mass: 0.450
+      origin:
+        position: "0.0030 -0.0449 0.0135"
+        orientation: "0 0 0"
+      inertia:  # all approx
+        ixx: 0.00045
+        ixy: 0.0
+        ixz: 0.0
+        iyy: 0.00060
+        iyz: 0.0
+        izz: 0.00025
 
   palm:
     mesh: "palm_pinch_r"
@@ -244,6 +280,8 @@ qbhand_right:
 
   synergy: *synergy
   manipulation: *manipulation
+  motor_1: *motor_1
+  motor_2: *motor_2
 
   # all fingers have the same base structure and only few things change among them (e.g. the pose of the knuckle)
   thumb:
@@ -335,6 +373,8 @@ qbhand_left:
 
   synergy: *synergy
   manipulation: *manipulation
+  motor_1: *motor_1
+  motor_2: *motor_2
 
   # all fingers have the same base structure and only few things change among them (e.g. the pose of the knuckle)
   thumb:

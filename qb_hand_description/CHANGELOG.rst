@@ -2,6 +2,11 @@
 Changelog for package qb_hand_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.0 (2022-07-06)
+------------------
+* Implemented a new controller to control SH2R motors independently
+* created URDF function to build hand attached to 90-deg flange
+
 2.3.0 (2022-04-08)
 ------------------
 * modified urdf and launch in order to attach SHR2 to robots urdf

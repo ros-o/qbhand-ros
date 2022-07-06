@@ -69,4 +69,30 @@ void qbHand2MotorsHW::write(const ros::Time &time, const ros::Duration &period) 
   qb_device_hardware_interface::qbDeviceHW::write(time, period);
 }
 
+void qbHand2MotorsHW::doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list){
+  ROS_INFO_STREAM_NAMED("qbhand2m1_hw", "[qbhand2m1_hw] is executing the switch of the controllers.");
+  bool synergies_controller_stopped = false;
+  bool motors_controller_started = false;
+
+  std::for_each(stop_list.begin(), stop_list.end(), [&](hardware_interface::ControllerInfo controller){
+    ROS_INFO_STREAM_NAMED("qbhand2m1_hw", "[qbhand2m1_hw] " << controller.name << " stopped.");
+    if(controller.name.find("synergies") != std::string::npos) {
+      synergies_controller_stopped = true;
+    } 
+  });
+
+  std::for_each(start_list.begin(), start_list.end(), [&](hardware_interface::ControllerInfo controller){
+    ROS_INFO_STREAM_NAMED("qbhand2m1_hw", "[qbhand2m1_hw] " << controller.name << " started.");
+    if(controller.name.find("motor_positions") != std::string::npos) {
+      motors_controller_started = true;
+    } 
+  });
+
+  if(synergies_controller_stopped && motors_controller_started) {
+    std::static_pointer_cast<qb_hand_transmission_interface::qbHand2MotorsVirtualTransmission>(transmission_.getTransmission())->setCommandWithSynergies(false);
+  } else {
+    std::static_pointer_cast<qb_hand_transmission_interface::qbHand2MotorsVirtualTransmission>(transmission_.getTransmission())->setCommandWithSynergies(true);
+  }
+}
+
 PLUGINLIB_EXPORT_CLASS(qb_hand_hardware_interface::qbHand2MotorsHW, hardware_interface::RobotHW)

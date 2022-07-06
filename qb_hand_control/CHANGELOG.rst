@@ -2,6 +2,11 @@
 Changelog for package qb_hand_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.0 (2022-07-06)
+------------------
+* Removed some comments
+* Implemented a new controller to control SH2R motors independently
+
 2.3.0 (2022-04-08)
 ------------------
 * modified SHR2 waypoints and limit range
