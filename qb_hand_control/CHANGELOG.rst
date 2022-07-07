@@ -2,6 +2,10 @@
 Changelog for package qb_hand_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.1 (2022-07-07)
+------------------
+* Added control for qbSotHand2 chain.
+
 3.0.0 (2022-07-06)
 ------------------
 * Removed some comments
