@@ -2,6 +2,11 @@
 Changelog for package qb_hand_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.2 (2022-09-20)
+------------------
+* FEAT: Added end effector link.
+* FEAT: Added xacro macro to build qb SoftHand Research with 90 deg flange
+
 3.0.1 (2022-07-07)
 ------------------
 * Added control for qbSotHand2 chain.

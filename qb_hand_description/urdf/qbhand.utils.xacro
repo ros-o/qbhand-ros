@@ -265,6 +265,14 @@
     <xacro:build_three_phalanx_finger_from_yaml finger="middle" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="ring" parent="${namespace}_palm"/>
     <xacro:build_three_phalanx_finger_from_yaml finger="little" parent="${namespace}_palm"/>
+
+    <joint name="${namespace}_end_effector_fixed_joint" type="fixed">
+      <origin xyz="-0.03 0.060 0.142" rpy="-1.57 0 0"/>
+      <parent link="${namespace}_base_link"/>
+      <child link="${namespace}_end_effector_link"/>
+    </joint>
+    <link name="${namespace}_end_effector_link"/>
+
   </xacro:macro>
 
   <xacro:macro name="build_rotated_hand_from_yaml" params="filename:='default' configuration:='qbhand_right' namespace parent parent_link_suffix:=^|'_link' *origin">
@@ -305,6 +313,15 @@
     <xacro:build_synergy_mechanism_from_yaml synergy_type="manipulation" parent="${namespace}_palm"/>
     <xacro:build_synergy_mechanism_from_yaml synergy_type="motor_1" parent="${namespace}_palm"/>
     <xacro:build_synergy_mechanism_from_yaml synergy_type="motor_2" parent="${namespace}_palm"/>
+  </xacro:macro>
+
+  <xacro:macro name="build_hand_from_yaml_with_90_deg_flange" params="filename:='default' configuration:='qbhand_right' namespace parent parent_link_suffix:=^|'_link' *origin">
+    <xacro:property name="yaml_filename" value="$(find qb_hand_description)/config/${filename}.yaml"/>
+    <xacro:property name="yaml_file" value="${load_yaml(yaml_filename)}"/>
+
+    <xacro:build_rotated_hand_from_yaml filename="${filename}" configuration="${configuration}" namespace="${namespace}" parent="${parent}">
+      <xacro:insert_block name="origin"/>
+    </xacro:build_rotated_hand_from_yaml>
   </xacro:macro>
 
   <xacro:macro name="build_hand_2m_from_yaml_with_90_deg_flange" params="filename:='default' configuration:='qbhand_right' namespace parent parent_link_suffix:=^|'_link' *origin">
