@@ -49,6 +49,38 @@ bool qbHand2MotorsHW::init(ros::NodeHandle &root_nh, ros::NodeHandle &robot_hw_n
   if (!qb_device_hardware_interface::qbDeviceHW::init(root_nh, robot_hw_nh)) {
     return false;
   }
+
+  std::string default_controller;
+  if (!robot_hw_nh.getParam("default_controller", default_controller)) {
+    ROS_ERROR_STREAM_THROTTLE_NAMED(60 ,"qbhand2m_hw", "[qbhand2m_hw] cannot retrieve 'default_controller' from the Parameter Server [" << robot_hw_nh.getNamespace() << "].");
+    return false;
+  }
+  std::vector<std::string> default_controller_joints;
+  if (!robot_hw_nh.getParam(ros::names::parentNamespace(robot_hw_nh.getNamespace()) + default_controller + "/joints", default_controller_joints)) {
+    ROS_ERROR_STREAM_THROTTLE_NAMED(60 ,"qbhand2m_hw", "[qbhand2m_hw] cannot retrieve 'joints' from the controller in the Parameter Server [" << ros::names::parentNamespace(robot_hw_nh.getNamespace()) + default_controller  << "].");
+    return false;
+  }
+
+  std::vector<double> commands;
+  if (getCommands(commands) == -1) {
+    ROS_ERROR_STREAM_THROTTLE_NAMED(60 ,"qbhand2m_hw", "[qbhand2m_hw] cannot retrieve command references from device [" << device_.id << "].");
+    return false;
+  }
+
+  trajectory_msgs::JointTrajectoryPoint point;
+  point.positions.resize(commands.size());
+  point.velocities.resize(commands.size());
+  point.accelerations.resize(commands.size());
+  point.effort.resize(commands.size());
+  for(auto &position:point.positions){
+    position = 0;
+  }
+ 
+  point.time_from_start = ros::Duration(0.1);
+  controller_first_point_trajectory_.points.push_back(point);
+  controller_first_point_trajectory_.joint_names = default_controller_joints;
+  // cannot publish it yet (the controller has not been spawned yet) first_command_publisher_.publish(first_point_trajectory_);
+
   // for qb SoftHand 2 Motors is important that the following assertions hold
   ROS_ASSERT(device_.position_limits.size() == 4);
   ROS_ASSERT(device_.position_limits.at(0) == device_.position_limits.at(2) && device_.position_limits.at(1) == device_.position_limits.at(3));
@@ -70,19 +102,19 @@ void qbHand2MotorsHW::write(const ros::Time &time, const ros::Duration &period) 
 }
 
 void qbHand2MotorsHW::doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list){
-  ROS_INFO_STREAM_NAMED("qbhand2m1_hw", "[qbhand2m1_hw] is executing the switch of the controllers.");
+  ROS_INFO_STREAM_NAMED("qbhand2m_hw", "[qbhand2m_hw] is executing the switch of the controllers.");
   bool synergies_controller_stopped = false;
   bool motors_controller_started = false;
 
   std::for_each(stop_list.begin(), stop_list.end(), [&](hardware_interface::ControllerInfo controller){
-    ROS_INFO_STREAM_NAMED("qbhand2m1_hw", "[qbhand2m1_hw] " << controller.name << " stopped.");
+    ROS_INFO_STREAM_NAMED("qbhand2m_hw", "[qbhand2m_hw] " << controller.name << " stopped.");
     if(controller.name.find("synergies") != std::string::npos) {
       synergies_controller_stopped = true;
     } 
   });
 
   std::for_each(start_list.begin(), start_list.end(), [&](hardware_interface::ControllerInfo controller){
-    ROS_INFO_STREAM_NAMED("qbhand2m1_hw", "[qbhand2m1_hw] " << controller.name << " started.");
+    ROS_INFO_STREAM_NAMED("qbhand2m_hw", "[qbhand2m_hw] " << controller.name << " started.");
     if(controller.name.find("motor_positions") != std::string::npos) {
       motors_controller_started = true;
     } 

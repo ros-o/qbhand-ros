@@ -2,6 +2,10 @@
 Changelog for package qb_hand_hardware_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.3 (2023-04-26)
+------------------
+* FEAT: fix startup behaviour (SH2R)
+
 3.0.2 (2022-09-20)
 ------------------
 

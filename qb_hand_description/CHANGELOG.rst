@@ -2,6 +2,9 @@
 Changelog for package qb_hand_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.3 (2023-04-26)
+------------------
+
 3.0.2 (2022-09-20)
 ------------------
 * FEAT: Added end effector link.

@@ -29,11 +29,16 @@
   <arg name="use_joint_limits" default="false" doc="Choose whether or not to use the robot joint limits."/>
   <arg name="use_waypoints" default="false" doc="Choose whether or not to use the waypoint references."/>
   <arg name="use_without_robot" default="true" doc="Choose whether or not to bring up robot description (e.g. when using with other robots is better to set it apart)."/>
-  
+  <arg name="use_specific_serial_port" default="false" doc="Choose whether or not to use a specific serial port."/>
+  <arg name="serial_port_name" default="/tmp/ttyUSB0" if="$(arg use_specific_serial_port)" doc="The name of the specific serial port on which the qbhand is connected"/>
 
   <group unless="$(arg use_gazebo)">
-    <include file="$(find qb_device_driver)/launch/communication_handler.launch" if="$(arg standalone)"/>
+    <include file="$(find qb_device_driver)/launch/communication_handler.launch" if="$(arg standalone)">
+      <arg name="use_specific_serial_port" value="$(arg use_specific_serial_port)"/>
+      <arg name="serial_port_name" value="$(arg serial_port_name)" if="$(arg use_specific_serial_port)"/>
+    </include>
   </group>
+
 
   <include file="$(find qb_device_bringup)/launch/device_bringup.launch" pass_all_args="true"/>
 
