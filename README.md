@@ -1,4 +1,4 @@
-![qbhand logo](https://www.qbrobotics.com/wp-content/themes/qbrobotics/img/logo-qbsofthand.svg)
+![qbhand logo](qb_hand_media/logo-qbsofthand-tick.png)
 
 [_qb SoftHand_](https://www.qbrobotics.com/products/qb-softhand/) is an **adaptable yet robust robotic hand** gripper for collaborative robotic arms and for humanoid robots. It is in scale 1:1 with the average human hand and it is similarily composed by 19 completely desensorized phalanges and a flat palm.
 
@@ -44,7 +44,7 @@ _Note: don't forget to logout or reboot._
 If you prefer to leave your catkin workspace as it is, you can simply install all the ROS packages from the Ubuntu official repositories:
 ```
 sudo apt update
-sudo apt install ros-kinetic-qb-hand
+sudo apt install ros-noetic-qb-hand
 ```
 
 ### Sources
@@ -55,8 +55,14 @@ Install the _qb SoftHand_ packages for a ROS user is straightforward. Nonetheles
 1. Clone both the `qb_device` and `qb_hand` packages to your Catkin Workspace, e.g. `~/catkin_ws`:
    ```
    cd `~/catkin_ws/src`
-   git clone https://bitbucket.org/qbrobotics/qbdevice-ros.git
+   git clone --recurse-submodules https://bitbucket.org/qbrobotics/qbdevice-ros.git
+   cd qbdevice-ros
+   git checkout production-noetic
+   git submodule update --init --recursive
+   cd ..
    git clone https://bitbucket.org/qbrobotics/qbhand-ros.git
+   cd qbhand-ros
+   git checkout production-noetic
    ```
 
 1. Compile the packages using `catkin`:
@@ -64,7 +70,7 @@ Install the _qb SoftHand_ packages for a ROS user is straightforward. Nonetheles
    cd `~/catkin_ws`
    catkin_make
    ```
-   **Note:** depending on your ROS installation, you may need some extra packages to properly compile the code. Please, be sure that you have already installed at least `ros-kinetic-ros-controllers`, `ros-kinetic-transmission-interface`, `ros-kinetic-joint-limits-interface`, `ros-kinetic-combined-robot-hw`, and their dependencies (_e.g. use `sudo apt install <ros-pkg>`_).
+   **Note:** depending on your ROS installation, you may need some extra packages to properly compile the code. Please, be sure that you have already installed at least `ros-noetic-ros-controllers`, `ros-noetic-transmission-interface`, `ros-noetic-joint-limits-interface`, `ros-noetic-combined-robot-hw`, and their dependencies (_e.g. use `sudo apt install <ros-pkg>`_).
 
 1. If you were not familiar with ROS you should be happy now: everything is done! Nonetheless, if you encounter some troubles during the compilation, feel free to ask for support on [our Bitbucket](https://bitbucket.org/account/user/qbrobotics/projects/ROS).
 

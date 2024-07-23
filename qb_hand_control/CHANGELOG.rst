@@ -2,6 +2,9 @@
 Changelog for package qb_hand_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.4 (2024-07-23)
+------------------
+
 3.0.3 (2023-04-26)
 ------------------
 * FEAT: added parameters to specify the serial port to connect to.
